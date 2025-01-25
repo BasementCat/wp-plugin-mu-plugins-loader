@@ -57,6 +57,39 @@ class Plugin implements PluginInterface, EventSubscriberInterface {
 			}
 		}
 
+		$dest_dir = sprintf(
+			'%s/%s',
+			dirname( $this->composer->getConfig()->get( 'vendor-dir' ) ),
+			trim( $hm_mu_plugins_path, '/' )
+		);
+		$dest_file = $dest_dir . '/loader.php';
+
+		// Discover installed mu-plugins if none are explicitly defined
+		// "Explicitly defined" includes the presence of the "mu-plugins" key in "extra"
+		if ( ! array_key_exists( 'mu-plugins', $extra ) ) {
+			foreach ( scandir( $dest_dir ) as $mu_plugin_dir ) {
+				$full_mu_plugin_dir = sprintf( '%s/%s', $dest_dir, $mu_plugin_dir );
+				if ( is_dir( $full_mu_plugin_dir ) && ! str_starts_with( $mu_plugin_dir, '.' ) ) {
+					foreach ( scandir( $full_mu_plugin_dir ) as $mu_plugin_file ) {
+						$full_mu_plugin_file = sprintf( '%s/%s', $full_mu_plugin_dir, $mu_plugin_file );
+						if ( is_file( $full_mu_plugin_file ) && str_ends_with( $full_mu_plugin_file, '.php' ) ) {
+							$is_plugin_file = false;
+							foreach ( file( $full_mu_plugin_file ) as $line) {
+								if ( preg_match( '#^\s*\*\s*Plugin Name:#', $line ) ) {
+									$is_plugin_file = true;
+									break;
+								}
+							}
+							if ( $is_plugin_file ) {
+								$hm_mu_plugins[] = sprintf( '%s/%s', $mu_plugin_dir, $mu_plugin_file );
+								break;
+							}
+						}
+					}
+				}
+			}
+		}
+
 		$loader = file_get_contents( __DIR__ . '/loader.php' );
 
 		// Replace the list of plugins if any present.
@@ -64,14 +97,7 @@ class Plugin implements PluginInterface, EventSubscriberInterface {
 			$loader = str_replace( '$hm_mu_plugins = []', '$hm_mu_plugins = ' . var_export( $hm_mu_plugins, true ), $loader );
 		}
 
-		$dest = sprintf(
-			'%s/%s/%s',
-			dirname( $this->composer->getConfig()->get( 'vendor-dir' ) ),
-			trim( $hm_mu_plugins_path, '/' ),
-			'loader.php'
-		);
-
-		file_put_contents( $dest, $loader );
+		file_put_contents( $dest_file, $loader );
 	}
 
 	/**

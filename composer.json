@@ -1,5 +1,5 @@
 {
-    "name": "humanmade/mu-plugins-loader",
+    "name": "basementcat/humanmade-mu-plugins-loader",
     "description": "A WordPress must-use plugin autoloader for mu-plugins in directories",
     "type": "composer-plugin",
     "license": "GPL-2.0-or-later",

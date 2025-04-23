@@ -66,7 +66,7 @@ class Plugin implements PluginInterface, EventSubscriberInterface {
 
 		// Discover installed mu-plugins if none are explicitly defined
 		// "Explicitly defined" includes the presence of the "mu-plugins" key in "extra"
-		if ( ! array_key_exists( 'mu-plugins', $extra ) ) {
+		if ( ! array_key_exists( 'mu-plugins', $extra ) && file_exists( $dest_dir ) && is_dir( $dest_dir ) ) {
 			foreach ( scandir( $dest_dir ) as $mu_plugin_dir ) {
 				$full_mu_plugin_dir = sprintf( '%s/%s', $dest_dir, $mu_plugin_dir );
 				if ( is_dir( $full_mu_plugin_dir ) && ! str_starts_with( $mu_plugin_dir, '.' ) ) {
@@ -97,6 +97,9 @@ class Plugin implements PluginInterface, EventSubscriberInterface {
 			$loader = str_replace( '$hm_mu_plugins = []', '$hm_mu_plugins = ' . var_export( $hm_mu_plugins, true ), $loader );
 		}
 
+		if ( ! file_exists( $dest_dir ) ) {
+			mkdir( $dest_dir, 0777, true );
+		}
 		file_put_contents( $dest_file, $loader );
 	}
 
